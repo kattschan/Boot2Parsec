@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="B2P Installer" Language="1033" Version="1.0.0.0" Manufacturer="Kat Tschan" UpgradeCode="{40C2D113-563F-49DD-A375-CED757C40270}">
+		<Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+
+		<!-- Define storage media -->
+		<MediaTemplate EmbedCab="yes" />
+
+		<!-- Define installation directory -->
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="B2P">
+					<!-- Main application files -->
+					<Component Id="MyAppComponent" Guid="{3CF2114B-A2CF-47EF-AB56-868D7DAC357A}">
+						<File Id="MyAppExe" Source="files/WinFormsB2PShell.exe" KeyPath="yes" />
+					</Component>
+					<Component Id="ParsecInstallerComponent" Guid="{1846ACEC-7363-414C-9BC4-68FE1762ABC1}">
+						<File Id="ParsecInstallerFile" Source="files/parsec-windows.exe" KeyPath="yes" />
+					</Component>
+				</Directory>
+			</Directory>
+		</Directory>
+
+		<!-- Features -->
+		<Feature Id="Complete" Title="Complete Installation" Level="1">
+			<ComponentRef Id="MyAppComponent" />
+			<ComponentRef Id="ParsecInstallerComponent" />
+		</Feature>
+
+		<!-- Custom action to run Parsec installer -->
+		<CustomAction Execute="deferred" Id="InstallParsec" FileKey="ParsecInstallerFile" ExeCommand="/silent /norun /percomputer" Return="check" Impersonate="no" />
+
+		<!-- Custom action to modify registry -->
+		<CustomAction Id="ModifyRegistry" Execute="deferred" Return="check" Impersonate="no" ExeCommand="reg add &quot;HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon&quot; /v Shell /t REG_SZ /d &quot;[INSTALLFOLDER]\WinFormsB2PShell.exe&quot; /f" Directory="TARGETDIR" />
+
+		<InstallExecuteSequence>
+			<Custom Action="InstallParsec" After="InstallFiles">NOT Installed</Custom>
+			<Custom Action="ModifyRegistry" After="InstallFiles">NOT Installed</Custom>
+		</InstallExecuteSequence>
+	</Product>
+</Wix>
